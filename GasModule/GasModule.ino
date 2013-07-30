@@ -1,9 +1,9 @@
 //GAS Module
 //Dino Tinitigan
-
+#include<SMP.h>
 byte ID = 42;
 byte header = 170;
-byte dataLength = 8;
+byte dataLength = 12;
 int COMSB;
 int COLSB;
 byte AlcoholMSB;
@@ -12,20 +12,18 @@ byte MethaneMSB;
 byte MethaneLSB;
 byte FlammableMSB;
 byte FlammableLSB;
-byte packet[10];
+byte packet[12];
 byte commandPacket[8];
 //calibrated Ro Values
 //todo get calibrated values
 double CORo = 8000;
-double AlcoholRo = 8600;
+double AlcoholRo = 10000;
 double MethaneRo = 10000;
 double FlammableRo = 10000;
 
-int bPin = 10;
-int sPin = 11;
 int ledPin = 13;
 int priority = 200;
-int wait = 100;
+int wait = 1000;
 
 int COSensor = 0;
 int AlcoholSensor = 1;
@@ -42,16 +40,16 @@ unsigned long last = 0;
 unsigned long current = 0;
 bool timedOut;
 
+#include<SMP.h>
+SMP gasModule(ID, Serial, 10, 11);
+
 //################################################################################################################
 //################################################################################################################
 void setup()
 {
   Serial.begin(115200);
-  pinMode(bPin, INPUT);
-  pinMode(sPin, OUTPUT);
   pinMode(ledPin, OUTPUT);
-  digitalWrite(sPin, HIGH);
-  delay(30000);    //allow heaters in sensor time to heat up
+  delay(15000);    //allow heaters in sensor time to heat up
 }
 //################################################################################################################
 //################################################################################################################
@@ -105,16 +103,21 @@ void loop()
   FlammableMSB = FlammablePPM/256;
   FlammableLSB = FlammablePPM%256;
   
-  packet[0] = ID;
-  packet[1] = dataLength;
+ 
+  packet[0] = dataLength;
+  packet[1] = 'c';
   packet[2] = COMSB;
   packet[3] = COLSB;
-  packet[4] = AlcoholMSB;
-  packet[5] = AlcoholLSB;
-  packet[6] = MethaneMSB;
-  packet[7] = MethaneLSB;
-  packet[8] = FlammableMSB;
-  packet[9] = FlammableLSB;
+  packet[4] = 'a';
+  packet[5] = AlcoholMSB;
+  packet[6] = AlcoholLSB;
+  packet[7] = 'm';
+  packet[8] = MethaneMSB;
+  packet[9] = MethaneLSB;
+  packet[10] = 'f';
+  packet[11] = FlammableMSB;
+  packet[12] = FlammableLSB;
+  
   
   
   //debug
@@ -151,7 +154,8 @@ void loop()
     }
     //else
     {
-      transmitData(packet, dataLength);
+      //transmitData(packet, dataLength);
+      gasModule.sendData(packet);
       last = millis();
     }
   }
